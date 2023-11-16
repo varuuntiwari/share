@@ -1,3 +1,7 @@
+// Package send contains the functions used to send data to the receiver.
+// It sends the control to the netscan package after extracting a valid IP address
+// to verify if it is on a valid IP range, which should be a private network. These
+// ranges are desribed in the netscan package.
 package send
 
 import (
@@ -5,6 +9,7 @@ import (
 	"net"
 
 	"github.com/varuuntiwari/share/netscan"
+	"github.com/varuuntiwari/share/vars"
 )
 
 var choice int
@@ -27,6 +32,7 @@ func SendFileCheck() {
 
 	// get interface selected
 	iface, _ := net.InterfaceByName(interfaces[(choice - 1)].Name)
+	vars.SelectedInterface = iface.Name
 	// get all addresses from interface
 	addrs, _ := iface.Addrs()
 	for _, addr := range addrs {

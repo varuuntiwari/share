@@ -1,9 +1,12 @@
 package netscan
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
+
+	"github.com/varuuntiwari/share/vars"
 )
 
 // Pre-defined IP ranges with mask which are accepted for use in local networks only
@@ -19,7 +22,7 @@ func IPinRange(ip net.IP) {
 }
 
 // localRangeCheck checks if target IP exists in given range of IPs
-func localRangeCheck(targetIP net.IP) (bool, string) {
+func localRangeCheck(targetIP net.IP) (bool, net.IPNet) {
 	for _, x := range validRanges {
 		t := strings.Split(x, "/")
 		ip, m := net.ParseIP(t[0]), t[1]
@@ -30,8 +33,34 @@ func localRangeCheck(targetIP net.IP) (bool, string) {
 			Mask: mask,
 		}
 		if network.Contains(targetIP) {
-			return true, x
+			return true, network
 		}
 	}
-	return false, ""
+	return false, net.IPNet{}
+}
+
+
+// Get the IP of local system on the selected network interface
+func GetLocalCIDR() net.Addr {
+	// Get the network interface by name
+	localInterface, err := net.InterfaceByName(vars.SelectedInterface)
+	if err != nil {
+		fmt.Println("Error getting interface:", err)
+		return nil
+	}
+
+	// Get the addresses associated with the network interface
+	addrs, err := localInterface.Addrs()
+	if err != nil {
+		fmt.Println("Error getting addresses:", err)
+		return nil
+	}
+
+	// Print the IP addresses
+	for _, addr := range addrs {
+		if ip := addr.(*net.IPNet).IP.To4(); ip != nil {
+			return addr
+		}
+	}
+	return nil
 }

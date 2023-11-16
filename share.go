@@ -14,7 +14,7 @@ func welcomeScreen() {
 ██▄▄▄▀▀█░▄▄░█░▀▀░█░▀▀▄█░▄▄
 ██░▀▀▀░█▄██▄█▄██▄█▄█▄▄█▄▄▄
 ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
- by varuuntiwari`)
+ by varuuntiwari@GitHub`)
  	fmt.Println(`
  	1. Send
  	2. Receive`)
