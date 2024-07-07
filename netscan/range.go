@@ -15,14 +15,7 @@ var (
 )
 
 // IPinRange checks if the IP detected is a local address or global address
-func IPinRange(ip net.IP) {
-	if ok, IPRange := localRangeCheck(ip); ok {
-		scanRange(IPRange)
-	}
-}
-
-// localRangeCheck checks if target IP exists in given range of IPs
-func localRangeCheck(targetIP net.IP) (bool, net.IPNet) {
+func IPinRange(targetIP net.IP) (bool, net.IPNet) {
 	for _, x := range validRanges {
 		t := strings.Split(x, "/")
 		ip, m := net.ParseIP(t[0]), t[1]
@@ -38,7 +31,6 @@ func localRangeCheck(targetIP net.IP) (bool, net.IPNet) {
 	}
 	return false, net.IPNet{}
 }
-
 
 // Get the IP of local system on the selected network interface
 func GetLocalCIDR() net.Addr {

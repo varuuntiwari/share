@@ -31,10 +31,10 @@ func nextIP(ip net.IP) {
 	}
 }
 
-// scanRange retrieves the local CIDR to find the IP range to scan for open ports.
+// ScanRange retrieves the local CIDR to find the IP range to scan for open ports.
 // After finding a valid IP range, it will scan all IPs in a multi-threaded approach
 // and add the IPs which respond to the variable ConnectedHosts in vars/vars.go.
-func scanRange(ipRange net.IPNet) {
+func ScanRange(ipRange net.IPNet) bool {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
@@ -53,55 +53,25 @@ func scanRange(ipRange net.IPNet) {
 
 		// Multi-threaded approach to scan for open ports
 		wg.Add(1)
-		go func(target string) {
-			defer wg.Done()
-			conn, err := net.DialTimeout("tcp", target, time.Second * 5)
-
-			if err == nil {
-				_, err := conn.Write(sendCheck)
-				conn.Close()
-				mu.Lock()
-				if err == nil {
-					vars.ConnectedHosts = append(vars.ConnectedHosts, strings.Split(target, ":")[0])
-				} else {
-					fmt.Println("[-] Error sending data to IP: ", strings.Split(target, ":")[0])
-				}
-				defer mu.Unlock()
-			}
-		}(target)
+		go pingIP(target, &wg, &mu, sendCheck)
 	}
 	wg.Wait()
-	fmt.Print("\033[32m")
-	fmt.Println("IPs open for connection:")
-	fmt.Print("\033[0m")
-	for i := 0; i < len(vars.ConnectedHosts); i++ {
-		fmt.Printf("%d. %v\n", i+1, vars.ConnectedHosts[i])
-	}
-	var choice int
-	fmt.Print("Select IP to send data to: ")
-	fmt.Scanf("%v")
-	fmt.Scanf("%d", &choice)
-
-	vars.TargetIP = vars.ConnectedHosts[choice - 1]
-	sendFile()
+	return true
 }
 
-// sendFile sends a test string to the selected IP address which is stored in
-// TargetIP in vars/vars.go. This is a temporary function and will be replaced
-// by the actual file sending function in the next release.
-func sendFile() {
-	target := vars.TargetIP + ":" + portStr
-	conn, err := net.Dial("tcp", target)
-	if err != nil {
-		panic(err)
-	}
+func pingIP(ip string, wg *sync.WaitGroup, mu *sync.Mutex, sendCheck []byte) {
+	defer wg.Done()
+	conn, err := net.DialTimeout("tcp", ip, time.Second * 5)
 
-	// Sending a string for testing
-	data := []byte("varuuntiwari@GitHub")
-
-	// Write the data to the connection
-	_, err = conn.Write(data)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		_, err := conn.Write(sendCheck)
+		conn.Close()
+		mu.Lock()
+		if err == nil {
+			vars.ConnectedHosts = append(vars.ConnectedHosts, strings.Split(ip, ":")[0])
+		} else {
+			fmt.Println("[-] Error sending data to IP: ", strings.Split(ip, ":")[0])
+		}
+		defer mu.Unlock()
 	}
 }

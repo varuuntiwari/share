@@ -4,7 +4,9 @@ package recv
 
 import (
 	"fmt"
+	"io"
 	"net"
+	"os"
 	"strconv"
 
 	"github.com/varuuntiwari/share/vars"
@@ -27,13 +29,12 @@ func ReceiveFileCheck() {
 		panic(err)
 	}
 
-	buf := make([]byte, 1024)
-	n, err := conn.Read(buf)
+	buf, err := io.ReadAll(conn)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("%s ready to send data...\n", string(buf[:n]))
+	fmt.Printf("%s ready to send data...\n", string(buf))
 
 	conn, err = ln.Accept()
 	if err != nil {
@@ -42,11 +43,16 @@ func ReceiveFileCheck() {
 
 	fmt.Println("Receiving data...")
 
-	n, err = conn.Read(buf)
+	file, err := io.ReadAll(conn)
 	if err != nil {
 		panic(err)
 	}
-	conn.Close()
 
-	fmt.Printf("Received data: %s\n", string(buf[:n]))
+	err = os.WriteFile("received_file.png", file, 0644)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("File received and saved as received_file.png.")
+	conn.Close()
 }

@@ -38,7 +38,23 @@ func SendFileCheck() {
 	for _, addr := range addrs {
 		// if address is IPv4, return it to scan network
 		if ip := addr.(*net.IPNet).IP.To4(); ip != nil {
-			netscan.IPinRange(ip)
+			exists, IPRange := netscan.IPinRange(ip)
+			if exists && netscan.ScanRange(IPRange) {
+				fmt.Print("\033[32m")
+				fmt.Println("IPs open for connection:")
+				fmt.Print("\033[0m")
+				for i := 0; i < len(vars.ConnectedHosts); i++ {
+					fmt.Printf("%d. %v\n", i+1, vars.ConnectedHosts[i])
+				}
+				var choice int
+				fmt.Print("Select IP to send data to: ")
+				fmt.Scanf("%v")
+				fmt.Scanf("%d", &choice)
+
+				vars.TargetIP = vars.ConnectedHosts[choice-1]
+				sendFile()
+			}
 		}
 	}
+
 }
